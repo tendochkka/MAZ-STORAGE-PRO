@@ -1,14 +1,16 @@
-from database.database import Database
+from services.database_manager import DatabaseManager
 
 
 class PartService:
 
     def __init__(self):
-        self.db = Database()
+        self.db = DatabaseManager()
 
     def get_all_parts(self):
+
         return self.db.fetchall("""
             SELECT
+
                 p.id,
                 p.article,
                 p.name,
@@ -62,7 +64,9 @@ class PartService:
                 comment
 
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+            VALUES(?,?,?,?,?,?,?,?,?,?)
+
         """, (
 
             article,

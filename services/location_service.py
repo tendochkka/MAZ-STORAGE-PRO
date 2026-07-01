@@ -1,37 +1,56 @@
-from database.database import Database
+from services.database_manager import DatabaseManager
 
 
 class LocationService:
+
     def __init__(self):
-        self.db = Database()
+        self.db = DatabaseManager()
 
     def get_all_locations(self):
+
         return self.db.fetchall("""
-            SELECT
-                id,
+
+            SELECT *
+
+            FROM locations
+
+            ORDER BY
                 zone,
                 rack,
                 shelf,
-                cell,
-                description
-            FROM locations
-            ORDER BY zone, rack, shelf, cell
+                cell
+
         """)
 
-    def add_location(self, zone, rack, shelf, cell, description=""):
+    def add_location(
+        self,
+        zone,
+        rack,
+        shelf,
+        cell,
+        description=""
+    ):
+
         self.db.execute("""
+
             INSERT INTO locations(
+
                 zone,
                 rack,
                 shelf,
                 cell,
                 description
+
             )
-            VALUES (?, ?, ?, ?, ?)
+
+            VALUES(?,?,?,?,?)
+
         """, (
+
             zone,
             rack,
             shelf,
             cell,
             description
+
         ))

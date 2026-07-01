@@ -1,30 +1,45 @@
 import sys
+import traceback
 
-from PySide6.QtWidgets import QApplication
-
-from ui.main_window import MainWindow
-from ui.theme import DARK_THEME
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from database.schema import create_database
+from services.logger import logger
+from ui.main_window import MainWindow
+
+
+def exception_hook(exc_type, exc_value, exc_traceback):
+
+    error = "".join(
+        traceback.format_exception(
+            exc_type,
+            exc_value,
+            exc_traceback
+        )
+    )
+
+    logger.error(error)
+
+    QMessageBox.critical(
+        None,
+        "Ошибка",
+        error
+    )
+
+
+sys.excepthook = exception_hook
 
 
 def main():
-    # Создаём базу данных и таблицы, если их ещё нет
+
     create_database()
 
-    # Создаём приложение Qt
     app = QApplication(sys.argv)
 
-    # Применяем тёмную тему
-    app.setStyleSheet(DARK_THEME)
-
-    # Создаём главное окно
     window = MainWindow()
 
-    # Показываем окно
     window.show()
 
-    # Запускаем цикл обработки событий
     sys.exit(app.exec())
 
 
