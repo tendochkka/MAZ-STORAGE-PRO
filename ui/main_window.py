@@ -1,10 +1,18 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QLabel,
+    QListWidget,
+    QListWidgetItem,
     QMainWindow,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
+    QSplitter,
+    QStackedWidget,
 )
+
+from ui.pages.dashboard_page import DashboardPage
+from ui.pages.parts_page import PartsPage
+from ui.pages.vehicles_page import VehiclesPage
+from ui.pages.reports_page import ReportsPage
+from ui.pages.settings_page import SettingsPage
+
 
 class MainWindow(QMainWindow):
 
@@ -15,54 +23,41 @@ class MainWindow(QMainWindow):
 
         self.resize(1400, 850)
 
-        central = QWidget()
+        splitter = QSplitter()
 
-        self.setCentralWidget(central)
+        self.setCentralWidget(splitter)
 
-        layout = QVBoxLayout()
+        self.menu = QListWidget()
 
-        title = QLabel("🚍 MAZ Storage Pro")
+        self.menu.setMaximumWidth(220)
 
-        title.setStyleSheet("""
-
-            font-size:32px;
-
-            font-weight:bold;
-
-            padding:25px;
-
-        """)
-
-        layout.addWidget(title)
-
-        buttons = [
-
+        pages = [
+            "🏠 Главная",
             "📦 Склад",
-
             "🚌 Автобусы",
-
-            "📤 Выдача",
-
-            "📥 Приемка",
-
-            "📊 Отчеты",
-
-            "⚙ Настройки"
-
+            "📊 Отчёты",
+            "⚙ Настройки",
         ]
 
-        for text in buttons:
+        for page in pages:
+            QListWidgetItem(page, self.menu)
 
-            button = QPushButton(text)
+        splitter.addWidget(self.menu)
 
-            button.setMinimumHeight(55)
+        self.stack = QStackedWidget()
 
-            layout.addWidget(button)
+        splitter.addWidget(self.stack)
 
-        central.setLayout(layout)
+        self.stack.addWidget(DashboardPage())
+        self.stack.addWidget(PartsPage())
+        self.stack.addWidget(VehiclesPage())
+        self.stack.addWidget(ReportsPage())
+        self.stack.addWidget(SettingsPage())
 
-        self.statusBar().showMessage("MAZ Storage Pro 1.0 Alpha")
+        splitter.setStretchFactor(1, 1)
 
+        self.menu.currentRowChanged.connect(self.stack.setCurrentIndex)
 
+        self.menu.setCurrentRow(0)
 
-
+        self.statusBar().showMessage("MAZ Storage Pro v0.1.0")
