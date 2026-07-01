@@ -7,27 +7,31 @@ class PartService:
         self.db = Database()
 
     def get_all_parts(self):
-    return self.db.fetchall("""
-        SELECT
-            p.id,
-            p.article,
-            p.name,
-            p.quantity,
+        return self.db.fetchall("""
+            SELECT
+                p.id,
+                p.article,
+                p.name,
+                p.quantity,
 
-            l.zone || '-' ||
-            l.rack || '-' ||
-            l.shelf || '-' ||
-            l.cell AS location,
+                CASE
+                    WHEN l.id IS NULL THEN ''
+                    ELSE
+                        l.zone || '-' ||
+                        l.rack || '-' ||
+                        l.shelf || '-' ||
+                        l.cell
+                END AS location,
 
-            p.price
+                p.price
 
-        FROM parts p
+            FROM parts p
 
-        LEFT JOIN locations l
-            ON p.location_id = l.id
+            LEFT JOIN locations l
+                ON p.location_id = l.id
 
-        ORDER BY p.name
-    """)
+            ORDER BY p.name
+        """)
 
     def add_part(
         self,
@@ -36,25 +40,40 @@ class PartService:
         quantity,
         location_id,
         price,
-        min_quantity
+        min_quantity,
+        manufacturer,
+        compatible_models,
+        unit,
+        comment
     ):
 
         self.db.execute("""
             INSERT INTO parts(
+
                 article,
                 name,
                 quantity,
                 location_id,
+                min_quantity,
                 price,
-                min_quantity
+                manufacturer,
+                compatible_models,
+                unit,
+                comment
+
             )
-            VALUES(?,?,?,?,?,?)
-        """,
-        (
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+
             article,
             name,
             quantity,
             location_id,
+            min_quantity,
             price,
-            min_quantity
+            manufacturer,
+            compatible_models,
+            unit,
+            comment
+
         ))
