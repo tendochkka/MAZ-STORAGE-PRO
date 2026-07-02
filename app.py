@@ -1,5 +1,6 @@
 import sys
 import traceback
+from database.seed import seed_database
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -33,6 +34,7 @@ sys.excepthook = exception_hook
 def main():
 
     create_database()
+    seed_database()
 
     app = QApplication(sys.argv)
 

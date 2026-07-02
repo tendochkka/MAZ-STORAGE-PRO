@@ -13,3 +13,42 @@
 2026-07-02 03:23:29,550 | INFO | Подключение к базе данных
 2026-07-02 03:23:29,551 | INFO | Соединение с базой закрыто
 2026-07-02 03:23:30,208 | INFO | Подключение к базе данных
+2026-07-02 03:27:42,068 | INFO | Подключение к базе данных
+2026-07-02 03:27:42,069 | INFO | Соединение с базой закрыто
+2026-07-02 03:27:42,069 | INFO | Подключение к базе данных
+2026-07-02 03:27:42,174 | INFO | Соединение с базой закрыто
+2026-07-02 03:27:42,783 | ERROR | Traceback (most recent call last):
+  File "D:\IT\MAZ-STORAGE-PRO\app.py", line 49, in <module>
+    main()
+    ~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\app.py", line 41, in main
+    window = MainWindow()
+  File "D:\IT\MAZ-STORAGE-PRO\ui\main_window.py", line 52, in __init__
+    self.stack.addWidget(PartsPage())
+                         ~~~~~~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\ui\pages\parts_page.py", line 66, in __init__
+    self.load_data()
+    ~~~~~~~~~~~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\ui\pages\parts_page.py", line 70, in load_data
+    parts = self.service.get_all_parts()
+  File "D:\IT\MAZ-STORAGE-PRO\services\part_service.py", line 15, in get_all_parts
+    return self.db.fetchall("""
+           ~~~~~~~~~~~~~~~~^^^^
+        SELECT
+        ^^^^^^
+    ...<27 lines>...
+        ORDER BY p.name
+        ^^^^^^^^^^^^^^^
+    """)
+    ^^^^
+  File "D:\IT\MAZ-STORAGE-PRO\services\database_manager.py", line 21, in fetchall
+    return self.db.fetchall(query, params)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\IT\MAZ-STORAGE-PRO\database\database.py", line 27, in fetchall
+    self.cursor.execute(query, params)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+
+2026-07-02 03:30:08,699 | INFO | Подключение к базе данных
+2026-07-02 03:30:08,700 | INFO | Соединение с базой закрыто
+2026-07-02 03:30:08,700 | INFO | Подключение к базе данных
