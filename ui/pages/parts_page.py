@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from services.part_service import PartService
+from services.search_service import SearchService
 from ui.dialogs.part_dialog import PartDialog
 
 
@@ -21,6 +22,7 @@ class PartsPage(QWidget):
         super().__init__()
 
         self.service = PartService()
+        self.search_service = SearchService()
 
         self.build_ui()
         self.load_data()
@@ -86,7 +88,7 @@ class PartsPage(QWidget):
         layout.addWidget(self.table)
 
         self.search.textChanged.connect(
-            self.filter_table
+            self.search_parts
         )
 
         self.refresh_btn.clicked.connect(
@@ -109,36 +111,59 @@ class PartsPage(QWidget):
 
         self.parts = self.service.get_all_parts()
 
-        self.table.setRowCount(len(self.parts))
+        self.fill_table(self.parts)
 
-        for row, part in enumerate(self.parts):
+    def fill_table(self, parts):
 
-            self.table.setItem(row, 0, QTableWidgetItem(part.article))
-            self.table.setItem(row, 1, QTableWidgetItem(part.name))
-            self.table.setItem(row, 2, QTableWidgetItem(str(part.quantity)))
-            self.table.setItem(row, 3, QTableWidgetItem(part.location_code))
-            self.table.setItem(row, 4, QTableWidgetItem(f"{part.price:.2f}"))
-            self.table.setItem(row, 5, QTableWidgetItem(str(part.id)))
+        self.table.setRowCount(len(parts))
+
+        for row, part in enumerate(parts):
+
+            self.table.setItem(
+                row,
+                0,
+                QTableWidgetItem(part.article)
+            )
+
+            self.table.setItem(
+                row,
+                1,
+                QTableWidgetItem(part.name)
+            )
+
+            self.table.setItem(
+                row,
+                2,
+                QTableWidgetItem(str(part.quantity))
+            )
+
+            self.table.setItem(
+                row,
+                3,
+                QTableWidgetItem(part.location_code)
+            )
+
+            self.table.setItem(
+                row,
+                4,
+                QTableWidgetItem(f"{part.price:.2f}")
+            )
+
+            self.table.setItem(
+                row,
+                5,
+                QTableWidgetItem(str(part.id))
+            )
 
         self.table.resizeColumnsToContents()
 
-    def filter_table(self):
+    def search_parts(self):
 
-        text = self.search.text().lower()
+        text = self.search.text()
 
-        for row in range(self.table.rowCount()):
+        self.parts = self.search_service.search_parts(text)
 
-            visible = False
-
-            for column in range(self.table.columnCount()):
-
-                item = self.table.item(row, column)
-
-                if item and text in item.text().lower():
-                    visible = True
-                    break
-
-            self.table.setRowHidden(row, not visible)
+        self.fill_table(self.parts)
 
     def current_part(self):
 
