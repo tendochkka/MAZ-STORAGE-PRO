@@ -1,17 +1,13 @@
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QListWidget,
-    QListWidgetItem,
     QMainWindow,
-    QSplitter,
+    QWidget,
+    QListWidget,
+    QHBoxLayout,
     QStackedWidget,
 )
 
-from ui.pages.dashboard_page import DashboardPage
 from ui.pages.parts_page import PartsPage
-from ui.pages.vehicles_page import VehiclesPage
-from ui.pages.reports_page import ReportsPage
-from ui.pages.settings_page import SettingsPage
+from ui.pages.locations_page import LocationsPage
 
 
 class MainWindow(QMainWindow):
@@ -20,44 +16,37 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("MAZ Storage Pro")
+        self.resize(1400, 800)
 
-        self.resize(1400, 850)
+        self.create_ui()
 
-        splitter = QSplitter()
+    def create_ui(self):
 
-        self.setCentralWidget(splitter)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        layout = QHBoxLayout(central_widget)
 
         self.menu = QListWidget()
+        self.menu.setFixedWidth(220)
 
-        self.menu.setMaximumWidth(220)
+        self.menu.addItem("📦 Запчасти")
+        self.menu.addItem("📍 Места хранения")
 
-        pages = [
-            "🏠 Главная",
-            "📦 Склад",
-            "🚌 Автобусы",
-            "📊 Отчёты",
-            "⚙ Настройки",
-        ]
-
-        for page in pages:
-            QListWidgetItem(page, self.menu)
-
-        splitter.addWidget(self.menu)
+        layout.addWidget(self.menu)
 
         self.stack = QStackedWidget()
 
-        splitter.addWidget(self.stack)
+        self.parts_page = PartsPage()
+        self.locations_page = LocationsPage()
 
-        self.stack.addWidget(DashboardPage())
-        self.stack.addWidget(PartsPage())
-        self.stack.addWidget(VehiclesPage())
-        self.stack.addWidget(ReportsPage())
-        self.stack.addWidget(SettingsPage())
+        self.stack.addWidget(self.parts_page)
+        self.stack.addWidget(self.locations_page)
 
-        splitter.setStretchFactor(1, 1)
+        layout.addWidget(self.stack)
 
-        self.menu.currentRowChanged.connect(self.stack.setCurrentIndex)
+        self.menu.currentRowChanged.connect(
+            self.stack.setCurrentIndex
+        )
 
         self.menu.setCurrentRow(0)
-
-        self.statusBar().showMessage("MAZ Storage Pro v0.1.0")
