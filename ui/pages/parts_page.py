@@ -6,12 +6,13 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QTableWidget,
     QTableWidgetItem,
+    QMessageBox,
     QAbstractItemView,
-    QHeaderView,
+    QHeaderView
 )
 
-
 from services.part_service import PartService
+from ui.dialogs.part_dialog import PartDialog
 
 
 class PartsPage(QWidget):
@@ -28,27 +29,27 @@ class PartsPage(QWidget):
 
         layout = QVBoxLayout(self)
 
-        self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("Поиск запчастей...")
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Поиск...")
 
-        layout.addWidget(self.search_edit)
+        layout.addWidget(self.search)
 
-        button_layout = QHBoxLayout()
+        buttons = QHBoxLayout()
 
-        self.add_button = QPushButton("Добавить")
-        self.edit_button = QPushButton("Изменить")
-        self.delete_button = QPushButton("Удалить")
-        self.refresh_button = QPushButton("Обновить")
+        self.add_btn = QPushButton("Добавить")
+        self.edit_btn = QPushButton("Изменить")
+        self.delete_btn = QPushButton("Удалить")
+        self.refresh_btn = QPushButton("Обновить")
 
-        button_layout.addWidget(self.add_button)
-        button_layout.addWidget(self.edit_button)
-        button_layout.addWidget(self.delete_button)
+        buttons.addWidget(self.add_btn)
+        buttons.addWidget(self.edit_btn)
+        buttons.addWidget(self.delete_btn)
 
-        button_layout.addStretch()
+        buttons.addStretch()
 
-        button_layout.addWidget(self.refresh_button)
+        buttons.addWidget(self.refresh_btn)
 
-        layout.addLayout(button_layout)
+        layout.addLayout(buttons)
 
         self.table = QTableWidget()
 
@@ -67,13 +68,15 @@ class PartsPage(QWidget):
             QAbstractItemView.SelectRows
         )
 
+        self.table.setSelectionMode(
+            QAbstractItemView.SingleSelection
+        )
+
         self.table.setEditTriggers(
             QAbstractItemView.NoEditTriggers
         )
 
         self.table.verticalHeader().setVisible(False)
-
-        self.table.horizontalHeader().setStretchLastSection(False)
 
         self.table.horizontalHeader().setSectionResizeMode(
             1,
@@ -82,12 +85,24 @@ class PartsPage(QWidget):
 
         layout.addWidget(self.table)
 
-        self.search_edit.textChanged.connect(
+        self.search.textChanged.connect(
             self.filter_table
         )
 
-        self.refresh_button.clicked.connect(
+        self.refresh_btn.clicked.connect(
             self.load_data
+        )
+
+        self.add_btn.clicked.connect(
+            self.add_part
+        )
+
+        self.edit_btn.clicked.connect(
+            self.edit_part
+        )
+
+        self.delete_btn.clicked.connect(
+            self.delete_part
         )
 
     def load_data(self):
@@ -98,47 +113,18 @@ class PartsPage(QWidget):
 
         for row, part in enumerate(self.parts):
 
-            self.table.setItem(
-                row,
-                0,
-                QTableWidgetItem(part.article)
-            )
-
-            self.table.setItem(
-                row,
-                1,
-                QTableWidgetItem(part.name)
-            )
-
-            self.table.setItem(
-                row,
-                2,
-                QTableWidgetItem(str(part.quantity))
-            )
-
-            self.table.setItem(
-                row,
-                3,
-                QTableWidgetItem(part.location_code)
-            )
-
-            self.table.setItem(
-                row,
-                4,
-                QTableWidgetItem(f"{part.price:.2f}")
-            )
-
-            self.table.setItem(
-                row,
-                5,
-                QTableWidgetItem(str(part.id))
-            )
+            self.table.setItem(row, 0, QTableWidgetItem(part.article))
+            self.table.setItem(row, 1, QTableWidgetItem(part.name))
+            self.table.setItem(row, 2, QTableWidgetItem(str(part.quantity)))
+            self.table.setItem(row, 3, QTableWidgetItem(part.location_code))
+            self.table.setItem(row, 4, QTableWidgetItem(f"{part.price:.2f}"))
+            self.table.setItem(row, 5, QTableWidgetItem(str(part.id)))
 
         self.table.resizeColumnsToContents()
 
     def filter_table(self):
 
-        text = self.search_edit.text().lower()
+        text = self.search.text().lower()
 
         for row in range(self.table.rowCount()):
 
@@ -152,7 +138,63 @@ class PartsPage(QWidget):
                     visible = True
                     break
 
-            self.table.setRowHidden(
-                row,
-                not visible
+            self.table.setRowHidden(row, not visible)
+
+    def current_part(self):
+
+        row = self.table.currentRow()
+
+        if row < 0:
+            return None
+
+        return self.parts[row]
+
+    def add_part(self):
+
+        dialog = PartDialog(parent=self)
+
+        if dialog.exec():
+
+            self.service.add_part(
+                dialog.get_part()
             )
+
+            self.load_data()
+
+    def edit_part(self):
+
+        part = self.current_part()
+
+        if part is None:
+            return
+
+        dialog = PartDialog(part, self)
+
+        if dialog.exec():
+
+            self.service.update_part(
+                dialog.get_part()
+            )
+
+            self.load_data()
+
+    def delete_part(self):
+
+        part = self.current_part()
+
+        if part is None:
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Удаление",
+            f"Удалить запчасть\n\n{part.article}\n{part.name}?"
+        )
+
+        if answer == QMessageBox.Yes:
+
+            self.service.delete_part(
+                part.id
+            )
+
+            self.load_data()
