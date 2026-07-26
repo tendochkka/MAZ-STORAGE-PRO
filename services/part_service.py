@@ -1,129 +1,86 @@
+from database.database import Database
 from models.part import Part
-from services.database_manager import DatabaseManager
 
 
 class PartService:
 
     def __init__(self):
-        self.db = DatabaseManager()
+        self.db = Database()
 
     # --------------------------------------------------
-    # Получение списка деталей
+    # Получить все запчасти
     # --------------------------------------------------
 
     def get_all_parts(self):
-        return self.db.fetchall("""
+
+        rows = self.db.fetchall("""
             SELECT
-                p.id,
-                p.article,
-                p.name,
-                p.quantity,
+
+                p.*,
 
                 CASE
+
                     WHEN l.id IS NULL THEN ''
+
                     ELSE
                         l.zone || '-' ||
                         l.rack || '-' ||
                         l.shelf || '-' ||
                         l.cell
-                END AS location,
 
-                p.location_id,
-                p.min_quantity,
-                p.price,
-                p.manufacturer,
-                p.compatible_models,
-                p.unit,
-                p.comment
+                END AS location_code
 
             FROM parts p
 
             LEFT JOIN locations l
-                ON p.location_id = l.id
+                ON l.id = p.location_id
 
             ORDER BY p.name
         """)
 
-    # --------------------------------------------------
-    # Получение объектов Part
-    # --------------------------------------------------
-
-    def get_part_objects(self):
-
-        rows = self.get_all_parts()
-
-        parts = []
-
-        for row in rows:
-
-            parts.append(
-                Part(
-                    id=row["id"],
-                    article=row["article"],
-                    name=row["name"],
-                    quantity=row["quantity"],
-                    location=row["location"],
-                    location_id=row["location_id"],
-                    min_quantity=row["min_quantity"],
-                    price=row["price"],
-                    manufacturer=row["manufacturer"],
-                    compatible_models=row["compatible_models"],
-                    unit=row["unit"],
-                    comment=row["comment"],
-                )
-            )
-
-        return parts
+        return [Part.from_row(row) for row in rows]
 
     # --------------------------------------------------
-    # Получение детали по ID
+    # Получить запчасть по ID
     # --------------------------------------------------
 
     def get_part_by_id(self, part_id):
 
         row = self.db.fetchone("""
-            SELECT *
-            FROM parts
-            WHERE id = ?
+            SELECT
+
+                p.*,
+
+                CASE
+
+                    WHEN l.id IS NULL THEN ''
+
+                    ELSE
+                        l.zone || '-' ||
+                        l.rack || '-' ||
+                        l.shelf || '-' ||
+                        l.cell
+
+                END AS location_code
+
+            FROM parts p
+
+            LEFT JOIN locations l
+                ON l.id = p.location_id
+
+            WHERE p.id = ?
         """, (part_id,))
 
-        if row is None:
-            return None
-
-        return Part(
-            id=row["id"],
-            article=row["article"],
-            name=row["name"],
-            quantity=row["quantity"],
-            location_id=row["location_id"],
-            min_quantity=row["min_quantity"],
-            price=row["price"],
-            manufacturer=row["manufacturer"],
-            compatible_models=row["compatible_models"],
-            unit=row["unit"],
-            comment=row["comment"],
-        )
+        return Part.from_row(row)
 
     # --------------------------------------------------
-    # Добавление детали
+    # Добавить запчасть
     # --------------------------------------------------
 
-    def add_part(
-        self,
-        article,
-        name,
-        quantity,
-        location_id,
-        price,
-        min_quantity,
-        manufacturer,
-        compatible_models,
-        unit,
-        comment,
-    ):
+    def add_part(self, part: Part):
 
         self.db.execute("""
-            INSERT INTO parts (
+            INSERT INTO parts(
 
                 article,
                 name,
@@ -138,23 +95,11 @@ class PartService:
 
             )
 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            article,
-            name,
-            quantity,
-            location_id,
-            min_quantity,
-            price,
-            manufacturer,
-            compatible_models,
-            unit,
-            comment,
-        ))
+            VALUES(?,?,?,?,?,?,?,?,?,?)
+        """, part.to_tuple())
 
     # --------------------------------------------------
-    # Обновление детали
+    # Обновить запчасть
     # --------------------------------------------------
 
     def update_part(self, part: Part):
@@ -176,9 +121,8 @@ class PartService:
                 comment=?
 
             WHERE id=?
+        """, (
 
-        """,
-        (
             part.article,
             part.name,
             part.quantity,
@@ -189,84 +133,18 @@ class PartService:
             part.compatible_models,
             part.unit,
             part.comment,
-            part.id,
+            part.id
+
         ))
 
     # --------------------------------------------------
-    # Удаление
+    # Удалить запчасть
     # --------------------------------------------------
 
     def delete_part(self, part_id):
 
         self.db.execute("""
             DELETE FROM parts
-            WHERE id = ?
-        """, (part_id,))
 
-    # --------------------------------------------------
-    # Обновление количества
-    # --------------------------------------------------
-
-    def update_quantity(self, part_id, quantity):
-
-        self.db.execute("""
-            UPDATE parts
-            SET quantity=?
             WHERE id=?
-        """,
-        (
-            quantity,
-            part_id,
-        ))
-
-    # --------------------------------------------------
-    # Поиск
-    # --------------------------------------------------
-
-    def search_parts(self, text):
-
-        text = f"%{text}%"
-
-        return self.db.fetchall("""
-            SELECT *
-
-            FROM parts
-
-            WHERE
-
-                article LIKE ?
-
-                OR name LIKE ?
-
-                OR manufacturer LIKE ?
-
-            ORDER BY name
-        """,
-        (
-            text,
-            text,
-            text,
-        ))
-
-    # --------------------------------------------------
-    # Минимальные остатки
-    # --------------------------------------------------
-
-    def get_low_stock_parts(self):
-
-        return self.db.fetchall("""
-            SELECT *
-
-            FROM parts
-
-            WHERE quantity <= min_quantity
-
-            ORDER BY quantity
-        """)
-
-    # --------------------------------------------------
-    # Закрытие БД
-    # --------------------------------------------------
-
-    def close(self):
-        self.db.close()
+        """, (part_id,))

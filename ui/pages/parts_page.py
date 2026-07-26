@@ -2,15 +2,16 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
     QPushButton,
     QLineEdit,
     QTableWidget,
     QTableWidgetItem,
+    QAbstractItemView,
+    QHeaderView,
 )
 
+
 from services.part_service import PartService
-from ui.dialogs.part_dialog import PartDialog
 
 
 class PartsPage(QWidget):
@@ -20,29 +21,34 @@ class PartsPage(QWidget):
 
         self.service = PartService()
 
+        self.build_ui()
+        self.load_data()
+
+    def build_ui(self):
+
         layout = QVBoxLayout(self)
 
-        title = QLabel("📦 Каталог запчастей")
-        title.setStyleSheet("""
-            font-size:24px;
-            font-weight:bold;
-        """)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Поиск запчастей...")
 
-        layout.addWidget(title)
+        layout.addWidget(self.search_edit)
 
-        top = QHBoxLayout()
+        button_layout = QHBoxLayout()
 
-        self.search = QLineEdit()
-        self.search.setPlaceholderText(
-            "Поиск по артикулу или названию..."
-        )
+        self.add_button = QPushButton("Добавить")
+        self.edit_button = QPushButton("Изменить")
+        self.delete_button = QPushButton("Удалить")
+        self.refresh_button = QPushButton("Обновить")
 
-        self.add_button = QPushButton("➕ Добавить")
+        button_layout.addWidget(self.add_button)
+        button_layout.addWidget(self.edit_button)
+        button_layout.addWidget(self.delete_button)
 
-        top.addWidget(self.search)
-        top.addWidget(self.add_button)
+        button_layout.addStretch()
 
-        layout.addLayout(top)
+        button_layout.addWidget(self.refresh_button)
+
+        layout.addLayout(button_layout)
 
         self.table = QTableWidget()
 
@@ -50,69 +56,103 @@ class PartsPage(QWidget):
 
         self.table.setHorizontalHeaderLabels([
             "Артикул",
-            "Название",
-            "Остаток",
-            "Место",
+            "Наименование",
+            "Количество",
+            "Место хранения",
             "Цена",
             "ID"
         ])
 
-        self.table.hideColumn(5)
+        self.table.setSelectionBehavior(
+            QAbstractItemView.SelectRows
+        )
+
+        self.table.setEditTriggers(
+            QAbstractItemView.NoEditTriggers
+        )
+
+        self.table.verticalHeader().setVisible(False)
+
+        self.table.horizontalHeader().setStretchLastSection(False)
+
+        self.table.horizontalHeader().setSectionResizeMode(
+            1,
+            QHeaderView.Stretch
+        )
 
         layout.addWidget(self.table)
 
-        self.add_button.clicked.connect(self.open_add_dialog)
+        self.search_edit.textChanged.connect(
+            self.filter_table
+        )
 
-        self.load_data()
+        self.refresh_button.clicked.connect(
+            self.load_data
+        )
 
     def load_data(self):
 
-        parts = self.service.get_all_parts()
+        self.parts = self.service.get_all_parts()
 
-        self.table.setRowCount(len(parts))
+        self.table.setRowCount(len(self.parts))
 
-        for row, part in enumerate(parts):
+        for row, part in enumerate(self.parts):
 
             self.table.setItem(
                 row,
                 0,
-                QTableWidgetItem(part["article"])
+                QTableWidgetItem(part.article)
             )
 
             self.table.setItem(
                 row,
                 1,
-                QTableWidgetItem(part["name"])
+                QTableWidgetItem(part.name)
             )
 
             self.table.setItem(
                 row,
                 2,
-                QTableWidgetItem(str(part["quantity"]))
+                QTableWidgetItem(str(part.quantity))
             )
 
             self.table.setItem(
                 row,
                 3,
-                QTableWidgetItem(part["location"])
+                QTableWidgetItem(part.location_code)
             )
 
             self.table.setItem(
                 row,
                 4,
-                QTableWidgetItem(str(part["price"]))
+                QTableWidgetItem(f"{part.price:.2f}")
             )
 
             self.table.setItem(
                 row,
                 5,
-                QTableWidgetItem(str(part["id"]))
+                QTableWidgetItem(str(part.id))
             )
 
         self.table.resizeColumnsToContents()
 
-    def open_add_dialog(self):
+    def filter_table(self):
 
-        dialog = PartDialog(self)
+        text = self.search_edit.text().lower()
 
-        dialog.exec()
+        for row in range(self.table.rowCount()):
+
+            visible = False
+
+            for column in range(self.table.columnCount()):
+
+                item = self.table.item(row, column)
+
+                if item and text in item.text().lower():
+                    visible = True
+                    break
+
+            self.table.setRowHidden(
+                row,
+                not visible
+            )

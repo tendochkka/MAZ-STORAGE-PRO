@@ -73,3 +73,31 @@ sqlite3.ProgrammingError: Cannot operate on a closed database.
 2026-07-26 18:33:51,475 | INFO | Подключение к базе данных
 2026-07-26 18:33:51,476 | INFO | Соединение с базой закрыто
 2026-07-26 18:33:51,476 | INFO | Подключение к базе данных
+2026-07-26 18:36:47,696 | INFO | Подключение к базе данных
+2026-07-26 18:36:47,696 | INFO | Соединение с базой закрыто
+2026-07-26 18:36:47,697 | INFO | Подключение к базе данных
+2026-07-26 18:36:47,753 | INFO | Подключение к базе данных
+2026-07-26 18:36:47,955 | ERROR | Traceback (most recent call last):
+  File "D:\IT\MAZ-STORAGE-PRO\app.py", line 49, in <module>
+    main()
+    ~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\app.py", line 41, in main
+    window = MainWindow()
+  File "D:\IT\MAZ-STORAGE-PRO\ui\main_window.py", line 21, in __init__
+    self.create_ui()
+    ~~~~~~~~~~~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\ui\main_window.py", line 40, in create_ui
+    self.parts_page = PartsPage()
+                      ~~~~~~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\ui\pages\parts_page.py", line 66, in __init__
+    self.load_data()
+    ~~~~~~~~~~~~~~^^
+  File "D:\IT\MAZ-STORAGE-PRO\ui\pages\parts_page.py", line 79, in load_data
+    QTableWidgetItem(part["article"])
+                     ~~~~^^^^^^^^^^^
+TypeError: 'Part' object is not subscriptable
+
+2026-07-26 18:43:29,945 | INFO | Подключение к базе данных
+2026-07-26 18:43:29,946 | INFO | Соединение с базой закрыто
+2026-07-26 18:43:29,946 | INFO | Подключение к базе данных
+2026-07-26 18:43:30,015 | INFO | Подключение к базе данных
