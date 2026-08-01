@@ -154,5 +154,22 @@ def seed_database():
 
                 VALUES(?,?,?,?,?)
             """, vehicle)
+    # --------------------------------------------------
+    # Проверяем мастеров
+    # --------------------------------------------------
 
-    
+    row = db.fetchone("SELECT COUNT(*) AS cnt FROM mechanics")
+
+    if row["cnt"] == 0:
+
+        mechanics = [
+            ("Иванов Иван",),
+            ("Петров Пётр",),
+        ]
+
+        for mechanic in mechanics:
+            db.execute("""
+                INSERT INTO mechanics(name)
+                VALUES(?)
+            """, mechanic)
+
